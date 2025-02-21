@@ -1,15 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import md5 from 'react-native-md5';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { useFonts, Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'; // Import Roboto
+import WaypointLogo from './assets/waypointlogo.svg';
+import EmailIcon from './assets/email.svg';
 
 const Stack = createStackNavigator();
+
+const CustomTextInput = ({ label, value, onChangeText, isValid }) => {
+  return (
+    <View style={[styles.inputContainer, !isValid && styles.invalidInput]}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email Address"
+        placeholderTextColor="#999"
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType="email-address"
+      />
+      <EmailIcon width={20} height={20} style={styles.icon} />
+    </View>
+  );
+};
 
 function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [isEmailValid, setIsEmailValid] = useState(true);
+  let [fontsLoaded] = useFonts({ Roboto_400Regular, Roboto_700Bold });
 
   useEffect(() => {
     checkLoginStatus();
@@ -32,30 +53,29 @@ function LoginScreen({ navigation }) {
       setIsEmailValid(false);
       return;
     }
-
     const emailHash = md5.hex_md5(email);
     await AsyncStorage.setItem('userHash', emailHash);
     Alert.alert('Login successful!');
     navigation.replace('Home');
   };
 
+  if (!fontsLoaded) return null;
+
   return (
     <View style={styles.container}>
       <View style={styles.topContainer}>
-        <Image source={require('./assets/login.jpg')} style={styles.image} />
-        <Text style={styles.title}>Login</Text>
-        <Text style={styles.subtitle}>Sign in to access your account</Text>
+        <WaypointLogo width={200} height={200} />
+        <Text style={styles.title}>Member Login</Text>
       </View>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[styles.input, !isEmailValid && styles.invalidInput]}
-          placeholder="Enter your email"
+      <View style={styles.centerWrapper}>
+        <CustomTextInput
+          label="Email"
           value={email}
           onChangeText={(text) => {
             setEmail(text);
             setIsEmailValid(true);
           }}
-          keyboardType="email-address"
+          isValid={isEmailValid}
         />
         {!isEmailValid && <Text style={styles.errorText}>Invalid email address</Text>}
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -77,16 +97,13 @@ function HomeScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.topContainer}>
         <Text style={styles.welcome}>Welcome Back</Text>
-        <Text style={styles.description}>
-          You have successfully logged in to your account.
-        </Text>
+        <Text style={styles.description}>You have successfully logged in to your account.</Text>
       </View>
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
-
 }
 
 export default function App() {
@@ -103,8 +120,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
     backgroundColor: '#fff',
     padding: 20,
   },
@@ -113,35 +128,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  image: {
-    width: 150,
-    height: 100,
-    marginBottom: 20,
-    resizeMode: 'cover',
-    borderRadius: 10,
-  },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 24,
+    fontFamily: 'Roboto_700Bold',
+    color: '#000',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
+  centerWrapper: {
+    flex: 1,
+    // justifyContent: 'center',
+    // alignItems: 'center',
+    width: '100%',
   },
   inputContainer: {
+    position: 'relative',
     width: '100%',
-    padding: 16,
+    borderWidth: 1,
+    borderColor: '#004ACB',
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 16,
-    width: '100%',
-    marginBottom: 10,
-    borderRadius: 5,
-    backgroundColor: '#f9f9f9',
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    fontSize: 16,
+    fontFamily: 'Roboto_400Regular',
+    borderWidth: 0,
+  },
+  icon: {
+    width: 24,
+    height: 24,
+    position: 'absolute',
+    right: 10,
+  },
+  label: {
+    position: 'absolute',
+    top: -10,
+    left: 10,
+    backgroundColor: 'white',
+    paddingHorizontal: 5,
+    fontSize: 14,
+    color: '#004ACB',
+    fontFamily: 'Roboto_700Bold',
   },
   invalidInput: {
     borderColor: 'red',
@@ -150,9 +181,11 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
     textAlign: 'left',
+    fontSize: 12,
+    fontFamily: 'Roboto_400Regular',
   },
   button: {
-    backgroundColor: '#16C47F',
+    backgroundColor: '#004ACB',
     paddingVertical: 16,
     paddingHorizontal: 40,
     borderRadius: 5,
@@ -161,11 +194,11 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Roboto_700Bold',
   },
   welcome: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Roboto_700Bold',
     marginBottom: 10,
   },
   description: {
@@ -174,5 +207,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     paddingHorizontal: 20,
+    fontFamily: 'Roboto_400Regular',
   },
 });
